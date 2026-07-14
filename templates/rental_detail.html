@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Transaksi #{{ rental.id }} - PS Rental Cloud Vault{% endblock %}
+{% block header_title %}Detail Transaksi #{{ rental.id }}{% endblock %}
+
+{% block header_actions %}
+{% if rental.status == 'Aktif' %}
+<form method="POST" action="{{ url_for('rentals.mark_returned', rental_id=rental.id) }}" onsubmit="return confirm('Tandai unit ini sudah dikembalikan?');">
+  <button type="submit" class="btn btn-ghost">Tandai Dikembalikan</button>
+</form>
+{% endif %}
+<a href="{{ url_for('vault.browse', prefix=rental.vault_prefix) }}" class="btn btn-primary">Buka Folder Vault &rarr;</a>
+{% endblock %}
+
+{% block content %}
+<div class="info-grid">
+  <div class="info-card">
+    <div class="info-label">Unit</div>
+    <div class="info-value info-value-small">{{ rental.unit_code }}</div>
+    <div class="stat-sub">{{ rental.unit_name }}</div>
+  </div>
+  <div class="info-card">
+    <div class="info-label">Pelanggan</div>
+    <div class="info-value info-value-small">{{ rental.customer_name }}</div>
+    <div class="stat-sub">{{ rental.customer_phone }}</div>
+  </div>
+  <div class="info-card">
+    <div class="info-label">Periode Sewa</div>
+    <div class="info-value info-value-small">{{ rental.start_date }}</div>
+    <div class="stat-sub">s/d {{ rental.end_date }}</div>
+  </div>
+  <div class="info-card">
+    <div class="info-label">Status</div>
+    <div class="info-value info-value-small">
+      <span class="badge badge-{{ 'green' if rental.status == 'Aktif' else 'grey' }}">{{ rental.status }}</span>
+    </div>
+    {% if rental.actual_return_date %}
+    <div class="stat-sub">Dikembalikan: {{ rental.actual_return_date }}</div>
+    {% endif %}
+  </div>
+  <div class="info-card accent-green">
+    <div class="info-label">Total Biaya</div>
+    <div class="info-value">{{ rental.total_price | rupiah }}</div>
+  </div>
+</div>
+
+{% if rental.notes %}
+<div class="panel">
+  <h3>Catatan</h3>
+  <p class="muted">{{ rental.notes }}</p>
+</div>
+{% endif %}
+
+<div class="panel vault-preview-panel">
+  <h3>Cloud Vault Transaksi Ini</h3>
+  <p class="muted">
+    Folder S3: <span class="mono">{{ rental.vault_prefix }}</span><br>
+    Simpan foto kondisi unit sebelum/sesudah disewa dan bukti pembayaran pada folder ini.
+  </p>
+  <a href="{{ url_for('vault.browse', prefix=rental.vault_prefix) }}" class="btn btn-primary">Kelola File di Vault &rarr;</a>
+</div>
+{% endblock %}

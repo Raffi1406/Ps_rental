@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}PS Rental Cloud Vault{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">PS</span>
+      <div>
+        <div class="brand-title">Rental Cloud Vault</div>
+        <div class="brand-sub">PS3 Management System</div>
+      </div>
+    </div>
+
+    <nav class="side-nav">
+      <a href="{{ url_for('dashboard.index') }}" class="side-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+        <span class="ico">◆</span> Dashboard
+      </a>
+      <a href="{{ url_for('units.list_units') }}" class="side-link {% if request.endpoint and request.endpoint.startswith('units.') %}active{% endif %}">
+        <span class="ico">▣</span> Unit PS3
+      </a>
+      <a href="{{ url_for('customers.list_customers') }}" class="side-link {% if request.endpoint and request.endpoint.startswith('customers.') %}active{% endif %}">
+        <span class="ico">◍</span> Pelanggan
+      </a>
+      <a href="{{ url_for('rentals.list_rentals') }}" class="side-link {% if request.endpoint and request.endpoint.startswith('rentals.') %}active{% endif %}">
+        <span class="ico">▤</span> Transaksi Sewa
+      </a>
+      <div class="side-divider"></div>
+      <div class="side-label">CLOUD STORAGE</div>
+      <a href="{{ url_for('vault.browse') }}" class="side-link {% if request.endpoint == 'vault.browse' %}active{% endif %}">
+        <span class="ico">☁</span> Cloud Vault (S3)
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-dot"></div> Terhubung ke AWS S3
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-title">{% block header_title %}Dashboard{% endblock %}</div>
+      <div class="topbar-actions">{% block header_actions %}{% endblock %}</div>
+    </header>
+
+    <div class="flash-stack">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+              <span>{{ message }}</span>
+              <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <div class="content-area">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

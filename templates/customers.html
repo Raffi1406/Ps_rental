@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Pelanggan - PS Rental Cloud Vault{% endblock %}
+{% block header_title %}Manajemen Pelanggan{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-primary" onclick="openModal('createCustomerModal')">+ Tambah Pelanggan</button>
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <table class="data-table">
+    <thead>
+      <tr><th>Nama</th><th>No. Telepon</th><th>Email</th><th>Alamat</th><th class="col-actions">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for c in customers %}
+      <tr>
+        <td>{{ c.name }}</td>
+        <td class="mono">{{ c.phone }}</td>
+        <td>{{ c.email or '-' }}</td>
+        <td>{{ c.address or '-' }}</td>
+        <td class="col-actions">
+          <form method="POST" action="{{ url_for('customers.delete_customer', customer_id=c.id) }}" class="inline-form" onsubmit="return confirm('Hapus pelanggan ini?');">
+            <button type="submit" class="icon-btn danger" title="Hapus">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="empty-row">Belum ada pelanggan terdaftar.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="modal-overlay" id="createCustomerModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Tambah Pelanggan</h3>
+      <button class="modal-close" onclick="closeModal('createCustomerModal')">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('customers.create_customer') }}">
+      <label class="form-label">Nama Lengkap</label>
+      <input type="text" name="name" class="form-input" required>
+      <label class="form-label">No. Telepon</label>
+      <input type="text" name="phone" class="form-input" required>
+      <label class="form-label">Email (opsional)</label>
+      <input type="email" name="email" class="form-input">
+      <label class="form-label">Alamat (opsional)</label>
+      <input type="text" name="address" class="form-input">
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('createCustomerModal')">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

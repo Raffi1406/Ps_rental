@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Cloud Vault - PS Rental Cloud Vault{% endblock %}
+{% block header_title %}Cloud Vault (S3){% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-ghost" onclick="openModal('createFolderModal')">+ Folder</button>
+<button class="btn btn-primary" onclick="openModal('uploadModal')">↑ Upload</button>
+{% endblock %}
+
+{% block content %}
+<div class="vault-meta">Bucket: <span class="mono">{{ bucket }}</span></div>
+
+<div class="breadcrumbs">
+  <a href="{{ url_for('vault.browse', prefix=root_prefix) }}">☁ Cloud Vault</a>
+  {% for crumb in breadcrumbs %}
+    <span class="crumb-sep">/</span>
+    <a href="{{ url_for('vault.browse', prefix=crumb.path) }}">{{ crumb.name }}</a>
+  {% endfor %}
+</div>
+
+<div class="panel">
+  <table class="file-table">
+    <thead>
+      <tr>
+        <th>Nama</th>
+        <th>Ukuran</th>
+        <th>Terakhir Diubah</th>
+        <th class="col-actions">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if parent_prefix is not none %}
+      <tr class="row-parent">
+        <td colspan="4">
+          <a href="{{ url_for('vault.browse', prefix=parent_prefix) }}" class="folder-link">
+            <span class="ico">↰</span> .. (kembali)
+          </a>
+        </td>
+      </tr>
+      {% endif %}
+
+      {% for folder in folders %}
+      <tr>
+        <td>
+          <a href="{{ url_for('vault.browse', prefix=folder.key) }}" class="folder-link">
+            <span class="ico">📁</span> {{ folder.name }}
+          </a>
+        </td>
+        <td class="muted">-</td>
+        <td class="muted">-</td>
+        <td class="col-actions">
+          <button class="icon-btn" title="Rename" onclick="promptRename('{{ folder.key }}', '{{ folder.name }}', true)">✎</button>
+          <button class="icon-btn danger" title="Hapus" onclick="promptDelete('{{ folder.key }}', true)">🗑</button>
+        </td>
+      </tr>
+      {% endfor %}
+
+      {% for f in files %}
+      <tr>
+        <td>
+          {% if f.is_image %}
+          <a href="#" class="file-link" onclick="previewImage('{{ f.key }}'); return false;">
+            <span class="ico">🖼</span> {{ f.name }}
+          </a>
+          {% else %}
+          <span class="file-link-plain"><span class="ico">📄</span> {{ f.name }}</span>
+          {% endif %}
+        </td>
+        <td>{{ f.size_human }}</td>
+        <td>{{ f.last_modified.strftime('%d %b %Y %H:%M') }}</td>
+        <td class="col-actions">
+          <a class="icon-btn" title="Download" href="{{ url_for('vault.download', key=f.key) }}">⬇</a>
+          <button class="icon-btn" title="Rename" onclick="promptRename('{{ f.key }}', '{{ f.name }}', false)">✎</button>
+          <button class="icon-btn danger" title="Hapus" onclick="promptDelete('{{ f.key }}', false)">🗑</button>
+        </td>
+      </tr>
+      {% endfor %}
+
+      {% if not folders and not files %}
+      <tr>
+        <td colspan="4" class="empty-row">Folder ini kosong. Upload file atau buat folder baru.</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal Upload -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Upload File ke Vault</h3>
+      <button class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
+    </div>
+    <form id="uploadForm" method="POST" action="{{ url_for('vault.upload') }}" enctype="multipart/form-data">
+      <input type="hidden" name="prefix" value="{{ prefix }}">
+      <div class="dropzone" id="dropzone">
+        <p>Seret foto/dokumen ke sini, atau klik untuk memilih</p>
+        <input type="file" name="files" id="fileInput" multiple>
+      </div>
+      <div id="fileList" class="file-preview-list"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('uploadModal')">Batal</button>
+        <button type="submit" class="btn btn-primary">Upload</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Create Folder -->
+<div class="modal-overlay" id="createFolderModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Buat Folder Baru</h3>
+      <button class="modal-close" onclick="closeModal('createFolderModal')">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('vault.create_folder') }}">
+      <input type="hidden" name="prefix" value="{{ prefix }}">
+      <label class="form-label">Nama Folder</label>
+      <input type="text" name="folder_name" class="form-input" placeholder="contoh: bukti-pembayaran" required>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('createFolderModal')">Batal</button>
+        <button type="submit" class="btn btn-primary">Buat</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Rename -->
+<div class="modal-overlay" id="renameModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Rename</h3>
+      <button class="modal-close" onclick="closeModal('renameModal')">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('vault.rename') }}">
+      <input type="hidden" name="prefix" value="{{ prefix }}">
+      <input type="hidden" name="old_key" id="renameOldKey">
+      <input type="hidden" name="is_folder" id="renameIsFolder">
+      <label class="form-label">Nama Baru</label>
+      <input type="text" name="new_name" id="renameNewName" class="form-input" required>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('renameModal')">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Delete Confirm -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box modal-small">
+    <div class="modal-header">
+      <h3>Konfirmasi Hapus</h3>
+      <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+    </div>
+    <p>Apakah anda yakin ingin menghapus item ini? Tindakan ini tidak bisa dibatalkan.</p>
+    <form method="POST" action="{{ url_for('vault.delete') }}">
+      <input type="hidden" name="prefix" value="{{ prefix }}">
+      <input type="hidden" name="key" id="deleteKey">
+      <input type="hidden" name="is_folder" id="deleteIsFolder">
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('deleteModal')">Batal</button>
+        <button type="submit" class="btn btn-danger">Hapus</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Preview Image -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal-box modal-preview">
+    <div class="modal-header">
+      <h3>Preview Gambar</h3>
+      <button class="modal-close" onclick="closeModal('previewModal')">&times;</button>
+    </div>
+    <div class="preview-body">
+      <img id="previewImg" src="" alt="preview">
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Transaksi Sewa - PS Rental Cloud Vault{% endblock %}
+{% block header_title %}Transaksi Sewa{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('rentals.new_rental_form') }}" class="btn btn-primary">+ Transaksi Baru</a>
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <table class="data-table">
+    <thead>
+      <tr><th>ID</th><th>Unit</th><th>Pelanggan</th><th>Periode</th><th>Status</th><th>Total</th><th class="col-actions">Vault</th></tr>
+    </thead>
+    <tbody>
+      {% for r in rentals %}
+      <tr>
+        <td class="mono">#{{ r.id }}</td>
+        <td>{{ r.unit_code }} &mdash; {{ r.unit_name }}</td>
+        <td>{{ r.customer_name }}</td>
+        <td>{{ r.start_date }} s/d {{ r.end_date }}</td>
+        <td><span class="badge badge-{{ 'green' if r.status == 'Aktif' else 'grey' }}">{{ r.status }}</span></td>
+        <td>{{ r.total_price | rupiah }}</td>
+        <td class="col-actions">
+          <a href="{{ url_for('rentals.detail', rental_id=r.id) }}" class="btn btn-ghost btn-small">Detail &amp; Vault</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty-row">Belum ada transaksi sewa.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

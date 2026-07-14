@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - PS Rental Cloud Vault{% endblock %}
+{% block header_title %}Dashboard{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('rentals.new_rental_form') }}" class="btn btn-primary">+ Transaksi Sewa Baru</a>
+{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Unit PS3</div>
+    <div class="stat-value">{{ stats.total_units }}</div>
+  </div>
+  <div class="stat-card accent-green">
+    <div class="stat-label">Unit Tersedia</div>
+    <div class="stat-value">{{ stats.available_units }}</div>
+  </div>
+  <div class="stat-card accent-amber">
+    <div class="stat-label">Sedang Disewa</div>
+    <div class="stat-value">{{ stats.rented_units }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Pelanggan</div>
+    <div class="stat-value">{{ stats.total_customers }}</div>
+  </div>
+  <div class="stat-card accent-green">
+    <div class="stat-label">Pendapatan (Selesai)</div>
+    <div class="stat-value stat-small">{{ stats.total_revenue_human }}</div>
+  </div>
+  {% if vault_info %}
+  <div class="stat-card accent-purple">
+    <div class="stat-label">Cloud Vault Storage</div>
+    <div class="stat-value stat-small">{{ vault_info.total_size_human }}</div>
+    <div class="stat-sub">{{ vault_info.total_objects }} objek di S3</div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <h3>Transaksi Terbaru</h3>
+    <a href="{{ url_for('rentals.list_rentals') }}" class="link-more">Lihat semua &rarr;</a>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Unit</th><th>Pelanggan</th><th>Periode</th><th>Status</th><th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in recent_rentals %}
+      <tr onclick="window.location='{{ url_for('rentals.detail', rental_id=r.id) }}'" class="row-clickable">
+        <td>#{{ r.id }}</td>
+        <td>{{ r.unit_code }} &mdash; {{ r.unit_name }}</td>
+        <td>{{ r.customer_name }}</td>
+        <td>{{ r.start_date }} s/d {{ r.end_date }}</td>
+        <td><span class="badge badge-{{ 'green' if r.status == 'Aktif' else 'grey' }}">{{ r.status }}</span></td>
+        <td>{{ r.total_price | rupiah }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="empty-row">Belum ada transaksi sewa.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

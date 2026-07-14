@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  # Emulator AWS S3 lokal — tidak butuh akun/koneksi AWS asli sama sekali.
+  localstack:
+    image: localstack/localstack:3
+    container_name: ps-rental-localstack
+    ports:
+      - "4566:4566"   # Edge port: semua layanan AWS emulated lewat port ini
+    environment:
+      - SERVICES=s3
+      - DEBUG=0
+      - PERSISTENCE=1
+    volumes:
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: ps-rental-cloud-vault
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      # Di dalam jaringan Docker, panggil LocalStack lewat nama service-nya.
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      # Tapi presigned URL yang dikirim ke browser harus pakai host yang bisa
+      # diakses dari komputer host, yaitu localhost.
+      - AWS_ENDPOINT_URL_PUBLIC=http://localhost:4566
+      # Simpan database di folder terpisah (bukan bind-mount file tunggal),
+      # supaya tidak bermasalah di Windows.
+      - DATABASE_PATH=/app/data/rental.db
+    volumes:
+      - db_data:/app/data
+    depends_on:
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  localstack_data:
+  db_data:

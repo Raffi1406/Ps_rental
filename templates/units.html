@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Unit PS3 - PS Rental Cloud Vault{% endblock %}
+{% block header_title %}Manajemen Unit PS3{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn-primary" onclick="openModal('createUnitModal')">+ Tambah Unit</button>
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <table class="data-table">
+    <thead>
+      <tr><th>Kode</th><th>Nama Unit</th><th>Kondisi</th><th>Harga/Hari</th><th>Status</th><th class="col-actions">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for u in units %}
+      <tr>
+        <td class="mono">{{ u.code }}</td>
+        <td>{{ u.name }}</td>
+        <td>{{ u.condition }}</td>
+        <td>{{ u.price_per_day | rupiah }}</td>
+        <td>
+          <span class="badge badge-{{ 'green' if u.status == 'Tersedia' else ('amber' if u.status == 'Disewa' else 'grey') }}">
+            {{ u.status }}
+          </span>
+        </td>
+        <td class="col-actions">
+          <form method="POST" action="{{ url_for('units.update_status', unit_id=u.id) }}" class="inline-form">
+            <select name="status" class="mini-select" onchange="this.form.submit()">
+              {% for s in ['Tersedia', 'Disewa', 'Maintenance'] %}
+              <option value="{{ s }}" {% if u.status == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </form>
+          <form method="POST" action="{{ url_for('units.delete_unit', unit_id=u.id) }}" class="inline-form" onsubmit="return confirm('Hapus unit ini?');">
+            <button type="submit" class="icon-btn danger" title="Hapus">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="empty-row">Belum ada unit PS3 terdaftar.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="modal-overlay" id="createUnitModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Tambah Unit PS3</h3>
+      <button class="modal-close" onclick="closeModal('createUnitModal')">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('units.create_unit') }}">
+      <label class="form-label">Kode Unit</label>
+      <input type="text" name="code" class="form-input" placeholder="contoh: PS3-004" required>
+      <label class="form-label">Nama / Model</label>
+      <input type="text" name="name" class="form-input" placeholder="contoh: PlayStation 3 Slim 500GB" required>
+      <label class="form-label">Kondisi</label>
+      <input type="text" name="condition" class="form-input" placeholder="Baik" value="Baik">
+      <label class="form-label">Harga Sewa per Hari (Rp)</label>
+      <input type="number" name="price_per_day" class="form-input" placeholder="35000" required>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('createUnitModal')">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

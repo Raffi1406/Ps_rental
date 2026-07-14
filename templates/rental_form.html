@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Transaksi Baru - PS Rental Cloud Vault{% endblock %}
+{% block header_title %}Transaksi Sewa Baru{% endblock %}
+
+{% block content %}
+<div class="panel panel-narrow">
+  <form method="POST" action="{{ url_for('rentals.create_rental') }}">
+    <label class="form-label">Unit PS3 (hanya yang tersedia)</label>
+    <select name="unit_id" class="form-input" required>
+      <option value="" disabled selected>-- Pilih unit --</option>
+      {% for u in units %}
+      <option value="{{ u.id }}">{{ u.code }} &mdash; {{ u.name }} ({{ u.price_per_day | rupiah }}/hari)</option>
+      {% endfor %}
+    </select>
+
+    <label class="form-label">Pelanggan</label>
+    <select name="customer_id" class="form-input" required>
+      <option value="" disabled selected>-- Pilih pelanggan --</option>
+      {% for c in customers %}
+      <option value="{{ c.id }}">{{ c.name }} ({{ c.phone }})</option>
+      {% endfor %}
+    </select>
+    <p class="form-hint">Pelanggan belum terdaftar? <a href="{{ url_for('customers.list_customers') }}">Tambah pelanggan baru</a> dulu.</p>
+
+    <div class="form-row">
+      <div>
+        <label class="form-label">Tanggal Mulai</label>
+        <input type="date" name="start_date" class="form-input" required>
+      </div>
+      <div>
+        <label class="form-label">Tanggal Selesai</label>
+        <input type="date" name="end_date" class="form-input" required>
+      </div>
+    </div>
+
+    <label class="form-label">Catatan (opsional)</label>
+    <textarea name="notes" class="form-input" rows="3" placeholder="Catatan tambahan..."></textarea>
+
+    <p class="form-hint">
+      Setelah transaksi dibuat, sistem otomatis membuat folder khusus di
+      <b>Cloud Vault (S3)</b> untuk menyimpan foto kondisi unit dan bukti pembayaran transaksi ini.
+    </p>
+
+    <div class="modal-actions">
+      <a href="{{ url_for('rentals.list_rentals') }}" class="btn btn-ghost">Batal</a>
+      <button type="submit" class="btn btn-primary">Buat Transaksi</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
